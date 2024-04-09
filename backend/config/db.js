@@ -1,40 +1,17 @@
-// backend/config/db.js
+const { Sequelize } = require('sequelize');
+require('dotenv').config();
 
-const mysql = require('mysql');
-require('dotenv').config(); // Load environment variables from .env file
-
-// Create a MySQL database connection pool
-const pool = mysql.createPool({
-    connectionLimit: 10, // Adjust as needed
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
+  host: process.env.DB_HOST,
+  dialect: 'mysql',
 });
 
-// Function to execute MySQL queries
-function executeQuery(query, params = []) {
-    return new Promise((resolve, reject) => {
-        pool.getConnection((error, connection) => {
-            if (error) {
-                console.error('Error connecting to MySQL:', error);
-                reject(error);
-            } else {
-                connection.query(query, params, (queryError, results) => {
-                    connection.release(); // Release the connection
-                    if (queryError) {
-                        console.error('Error executing MySQL query:', queryError);
-                        reject(queryError);
-                    } else {
-                        resolve(results);
-                    }
-                });
-            }
-        });
-    });
-}
+sequelize.authenticate()
+  .then(() => {
+    console.log('Database connection has been established successfully.');
+  })
+  .catch(err => {
+    console.error('Unable to connect to the database:', err);
+  });
 
-module.exports = {
-    pool,
-    executeQuery
-};
+module.exports = sequelize;
